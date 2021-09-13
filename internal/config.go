@@ -34,7 +34,7 @@ func DefaultConfig() Config {
 	location := fromEnv(fmt.Sprintf("%s_LOCATION", strings.ToUpper(BotName)), "")
 	return Config{
 		Location:        location,
-		LogMotions:      fromEnvBool(fmt.Sprintf("%s_LOG_MOTIONS", strings.ToUpper(BotName)), true),
+		LogMotions:      fromEnvBool(fmt.Sprintf("%s_LOG_MOTIONS", strings.ToUpper(BotName)), false),
 		Pin:             fromEnv(fmt.Sprintf("%s_GPIO_PIN", strings.ToUpper(BotName)), "7"),
 		PollingInterval: fromEnvInt(fmt.Sprintf("%s_GPIO_POLLING_MS", strings.ToUpper(BotName)), 75),
 		MqttConfig: MqttConfig{
