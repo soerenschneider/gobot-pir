@@ -42,7 +42,7 @@ func DefaultConfig() Config {
 			ClientId: fromEnv(fmt.Sprintf("%s_MQTT_CLIENT_ID", strings.ToUpper(BotName)), fmt.Sprintf("%s-%s", BotName, location)),
 			Topic:    fromEnv(fmt.Sprintf("%s_MQTT_TOPIC", strings.ToUpper(BotName)), fmt.Sprintf("%s/%s", BotName, location)),
 		},
-		MetricConfig: fromEnv(fmt.Sprintf("%s_METRICS_ADDR", strings.ToUpper(BotName)), ":9400"),
+		MetricConfig: fromEnv(fmt.Sprintf("%s_METRICS_ADDR", strings.ToUpper(BotName)), ":9191"),
 	}
 }
 
