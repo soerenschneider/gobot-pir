@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"gobot-motion-detection/internal"
+	"gobot-motion/internal"
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mqtt"
 	"gobot.io/x/gobot/platforms/raspi"
@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	log.Printf("Started %s, version %s, commit %s, built at %s", internal.BotName, internal.BuildVersion, internal.CommitHash, internal.BuildTime)
 	conf := getConfig()
 	err := conf.Validate()
 	conf.Print()
