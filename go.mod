@@ -1,4 +1,4 @@
-module gobot-motion
+module gobot-motion-detection
 
 go 1.16
 
