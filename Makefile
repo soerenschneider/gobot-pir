@@ -1,5 +1,5 @@
-BINARY_NAME = gobot-motion
-MODULE = gobot-motion
+BINARY_NAME = gobot-motion-detection
+MODULE = gobot-motion-detection
 
 build: version-info
 	go build -ldflags="-X '$(MODULE)/internal.BuildTime=${BUILD_TIME}' -X '$(MODULE)/internal.BuildVersion=${VERSION}' -X '$(MODULE)/internal.CommitHash=${COMMIT_HASH}'" -o $(BINARY_NAME) cmd/main.go
