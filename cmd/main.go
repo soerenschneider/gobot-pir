@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"gobot-motion/internal"
+	"gobot-motion-detection/internal"
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mqtt"
 	"gobot.io/x/gobot/platforms/raspi"
