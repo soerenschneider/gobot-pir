@@ -4,11 +4,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"gobot-pir/internal/config"
 	"log"
 	"net/http"
 )
 
-const namespace = BotName
+const namespace = config.BotName
 
 var (
 	metricsMotionsDetected = promauto.NewCounterVec(prometheus.CounterOpts{

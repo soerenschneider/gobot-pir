@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
-	"gobot-motion-detection/internal"
+	"fmt"
+	"gobot-pir/internal"
+	"gobot-pir/internal/config"
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mqtt"
 	"gobot.io/x/gobot/platforms/raspi"
@@ -11,7 +13,7 @@ import (
 )
 
 func main() {
-	log.Printf("Started %s, version %s, commit %s, built at %s", internal.BotName, internal.BuildVersion, internal.CommitHash, internal.BuildTime)
+	log.Printf("Started %s, version %s, commit %s, built at %s", config.BotName, internal.BuildVersion, internal.CommitHash, internal.BuildTime)
 	conf := getConfig()
 	err := conf.Validate()
 	conf.Print()
@@ -24,8 +26,9 @@ func main() {
 	}
 
 	raspberry := raspi.NewAdaptor()
-	driver := gpio.NewPIRMotionDriver(raspberry, conf.Pin, time.Millisecond*time.Duration(conf.PollingInterval))
-	mqttAdaptor := mqtt.NewAdaptor(conf.MqttConfig.Host, conf.MqttConfig.ClientId)
+	driver := gpio.NewPIRMotionDriver(raspberry, conf.GpioPin, time.Millisecond*time.Duration(conf.GpioPollingIntervalMs))
+	clientId := fmt.Sprintf("%s_%s", config.BotName, conf.Location)
+	mqttAdaptor := mqtt.NewAdaptor(conf.MqttConfig.Host, clientId)
 	adaptors := &internal.MotionDetection{
 		Driver:      driver,
 		Adaptor:     raspberry,
@@ -40,17 +43,17 @@ func main() {
 	}
 }
 
-func getConfig() internal.Config {
+func getConfig() config.Config {
 	var configFile string
 	flag.StringVar(&configFile, "config", "", "File to read configuration from")
 	flag.Parse()
 	if configFile == "" {
 		log.Println("Building config from env vars")
-		return internal.DefaultConfig()
+		return config.DefaultConfig()
 	}
 
 	log.Printf("Reading config from file %s", configFile)
-	conf, err := internal.ReadJsonConfig(configFile)
+	conf, err := config.ReadJsonConfig(configFile)
 	if err != nil {
 		log.Fatalf("Could not read config from %s: %v", configFile, err)
 	}

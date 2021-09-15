@@ -1,5 +1,5 @@
-BINARY_NAME = gobot-motion-detection
-MODULE = gobot-motion-detection
+BINARY_NAME = gobot-pir
+MODULE = gobot-pir
 
 build: version-info
 	go build -ldflags="-X '$(MODULE)/internal.BuildTime=${BUILD_TIME}' -X '$(MODULE)/internal.BuildVersion=${VERSION}' -X '$(MODULE)/internal.CommitHash=${COMMIT_HASH}'" -o $(BINARY_NAME) cmd/main.go
@@ -16,6 +16,9 @@ coverage:
 	go test ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o=coverage.html
 	go tool cover -func=coverage.out -o=coverage.out
+
+fmt:
+	find . -iname "*.go" -exec go fmt {} \;
 
 unittest:
 	go test ./...

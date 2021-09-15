@@ -1,7 +1,8 @@
-package internal
+package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,40 +11,80 @@ import (
 	"strings"
 )
 
-const BotName = "gobot_motion_detection"
+const (
+	BotName                = "gobot_pir"
+	defaultLogValues       = false
+	defaultIntervalSeconds = 30
+	defaultMetricConfig    = ":9400"
+)
 
-// This regex is not a very strict check, we don't validate hostname or ip (v4, v6) addresses...
-var mqttHostRegex = regexp.MustCompile(`\w{3,}://.{3,}:\d{2,4}`)
+var (
+	// This regex is not a very strict check, we don't validate hostname or ip (v4, v6) addresses...
+	mqttHostRegex = regexp.MustCompile(`^\w{3,}://.{3,}:\d{2,5}$`)
+
+	// We don't care that technically it's allowed to start with a slash
+	mqttTopicRegex = regexp.MustCompile("^([\\w%]+)(/[\\w%]+)*$")
+)
 
 type Config struct {
-	Location        string `json:"location,omitempty"`
-	MetricConfig    string `json:"metrics_addr,omitempty"`
-	Pin             string `json:"gpio_pin,omitempty"`
-	PollingInterval int    `json:"polling_interval_ms,omitempty"`
-	LogMotions      bool   `json:"log_motions,omitempty"`
+	Location     string `json:"location,omitempty"`
+	MetricConfig string `json:"metrics_addr,omitempty"`
+	IntervalSecs int    `json:"interval_s,omitempty"`
+	LogSensor    bool   `json:"log_sensor,omitempty"`
 	MqttConfig
+	SensorConfig
 }
 
 type MqttConfig struct {
-	Host     string `json:"mqtt_host,omitempty"`
-	ClientId string `json:"mqtt_client_id,omitempty"`
-	Topic    string `json:"mqtt_topic,omitempty"`
+	Host  string `json:"mqtt_host,omitempty"`
+	Topic string `json:"mqtt_topic,omitempty"`
 }
 
 func DefaultConfig() Config {
-	location := fromEnv(fmt.Sprintf("%s_LOCATION", strings.ToUpper(BotName)), "")
 	return Config{
-		Location:        location,
-		LogMotions:      fromEnvBool(fmt.Sprintf("%s_LOG_MOTIONS", strings.ToUpper(BotName)), false),
-		Pin:             fromEnv(fmt.Sprintf("%s_GPIO_PIN", strings.ToUpper(BotName)), "7"),
-		PollingInterval: fromEnvInt(fmt.Sprintf("%s_GPIO_POLLING_MS", strings.ToUpper(BotName)), 75),
-		MqttConfig: MqttConfig{
-			Host:     fromEnv(fmt.Sprintf("%s_MQTT_HOST", strings.ToUpper(BotName)), ""),
-			ClientId: fromEnv(fmt.Sprintf("%s_MQTT_CLIENT_ID", strings.ToUpper(BotName)), fmt.Sprintf("%s-%s", BotName, location)),
-			Topic:    fromEnv(fmt.Sprintf("%s_MQTT_TOPIC", strings.ToUpper(BotName)), fmt.Sprintf("%s/%s", BotName, location)),
-		},
-		MetricConfig: fromEnv(fmt.Sprintf("%s_METRICS_ADDR", strings.ToUpper(BotName)), ":9191"),
+		LogSensor:    defaultLogValues,
+		IntervalSecs: defaultIntervalSeconds,
+		MetricConfig: defaultMetricConfig,
+		SensorConfig: defaultSensorConfig(),
 	}
+}
+
+func ConfigFromEnv() Config {
+	conf := DefaultConfig()
+
+	location, err := fromEnv("LOCATION")
+	if err == nil {
+		conf.Location = location
+	}
+
+	logValues, err := fromEnvBool("LOG_VALUES")
+	if err == nil {
+		conf.LogSensor = logValues
+	}
+
+	intervalSeconds, err := fromEnvInt("INTERVAL_S")
+	if err == nil {
+		conf.IntervalSecs = intervalSeconds
+	}
+
+	mqttHost, err := fromEnv("MQTT_HOST")
+	if err == nil {
+		conf.Host = mqttHost
+	}
+
+	mqttTopic, err := fromEnv("MQTT_TOPIC")
+	if err == nil {
+		conf.Topic = mqttTopic
+	}
+
+	metricConfig, err := fromEnv("METRICS_ADDR")
+	if err == nil {
+		conf.MetricConfig = metricConfig
+	}
+
+	conf.SensorConfig.ConfigFromEnv()
+
+	return conf
 }
 
 func ReadJsonConfig(filePath string) (*Config, error) {
@@ -57,44 +98,54 @@ func ReadJsonConfig(filePath string) (*Config, error) {
 	return &ret, err
 }
 
-func (c *Config) Validate() error {
-	if len(c.Location) == 0 {
-		return fmt.Errorf("empty location provided")
+func (conf *Config) Validate() error {
+	if conf.Location == "" {
+		return errors.New("empty location provided")
 	}
 
-	parsedPin, err := strconv.Atoi(c.Pin)
-	if err != nil {
-		return fmt.Errorf("could not parse '%s' as pin: %v", c.Pin, err)
-	}
-	if parsedPin < 0 {
-		return fmt.Errorf("invalid pin provided: %d", parsedPin)
+	if conf.IntervalSecs < 30 {
+		return fmt.Errorf("invalid interval: must not be lower than 30 but is %d", conf.IntervalSecs)
 	}
 
-	if c.PollingInterval < 5 {
-		return fmt.Errorf("polling interval can not be smaller than 5: %d", c.PollingInterval)
+	if conf.IntervalSecs > 300 {
+		return fmt.Errorf("invalid interval: mut not be greater than 300 but is %d", conf.IntervalSecs)
 	}
 
-	if c.PollingInterval > 500 {
-		return fmt.Errorf("polling interval too high: %d", c.PollingInterval)
+	if err := matchTopic(conf.Topic); err != nil {
+		return errors.New("invalid mqtt topic provided")
 	}
 
-	// TODO: improve check
-	if strings.Index(c.MqttConfig.Topic, " ") != -1 {
-		return fmt.Errorf("invalid mqtt topic provided")
+	if err := matchHost(conf.MqttConfig.Host); err != nil {
+		return err
 	}
 
-	return matchHost(c.MqttConfig.Host)
+	if err := conf.SensorConfig.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (c *Config) Print() {
-	log.Printf("Location=%s", c.Location)
-	log.Printf("LogMotions=%t", c.LogMotions)
-	log.Printf("MetricConfig=%s", c.MetricConfig)
-	log.Printf("GpioPin=%s", c.Pin)
-	log.Printf("GpioPollingIntervalMs=%d", c.PollingInterval)
-	log.Printf("Host=%s", c.Host)
-	log.Printf("Topic=%s", c.Topic)
-	log.Printf("ClientId=%s", c.ClientId)
+func (conf *Config) Print() {
+	log.Println("-----------------")
+	log.Println("Configuration:")
+	log.Printf("Location=%s", conf.Location)
+	log.Printf("LogSensor=%t", conf.LogSensor)
+	log.Printf("MetricConfig=%s", conf.MetricConfig)
+	log.Printf("IntervalSecs=%d", conf.IntervalSecs)
+	log.Printf("Host=%s", conf.Host)
+	log.Printf("Topic=%s", conf.Topic)
+
+	conf.SensorConfig.Print()
+
+	log.Println("-----------------")
+}
+
+func matchTopic(topic string) error {
+	if !mqttTopicRegex.MatchString(topic) {
+		return fmt.Errorf("invalid topic format used")
+	}
+	return nil
 }
 
 func matchHost(host string) error {
@@ -104,36 +155,47 @@ func matchHost(host string) error {
 	return nil
 }
 
-func fromEnv(name, def string) string {
-	val := os.Getenv(name)
-	if val == "" {
-		return def
-	}
-	return val
+func computeEnvName(name string) string {
+	return fmt.Sprintf("%s_%s", strings.ToUpper(BotName), strings.ToUpper(name))
 }
 
-func fromEnvInt(name string, def int) int {
+func fromEnv(name string) (string, error) {
+	name = computeEnvName(name)
 	val := os.Getenv(name)
 	if val == "" {
-		return def
+		return "", errors.New("not defined")
+	}
+	return val, nil
+}
+
+func fromEnvInt(name string) (int, error) {
+	val, err := fromEnv(name)
+	if err != nil {
+		return -1, err
 	}
 
 	parsed, err := strconv.Atoi(val)
 	if err != nil {
-		return def
+		return -1, err
 	}
-	return parsed
+	return parsed, nil
 }
 
-func fromEnvBool(name string, def bool) bool {
-	val := os.Getenv(name)
-	if val == "" {
-		return def
+func fromEnvBool(name string) (bool, error) {
+	val, err := fromEnv(name)
+	if err != nil {
+		return false, err
 	}
 
 	parsed, err := strconv.ParseBool(val)
 	if err != nil {
-		return def
+		return false, err
 	}
-	return parsed
+	return parsed, nil
+}
+
+func (conf *Config) FormatTopic() {
+	if strings.Contains(conf.Topic, "%s") {
+		conf.Topic = fmt.Sprintf(conf.Topic, conf.Location)
+	}
 }

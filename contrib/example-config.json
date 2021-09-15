@@ -1,0 +1,5 @@
+{
+  "location": "loc",
+  "mqtt_host": "tcp://host:1883",
+  "mqtt_topic": "sensors/%s/brightness"
+}

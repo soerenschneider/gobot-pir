@@ -1,4 +1,4 @@
-module gobot-motion-detection
+module gobot-pir
 
 go 1.16
 

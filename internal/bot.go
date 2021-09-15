@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"gobot-pir/internal/config"
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mqtt"
@@ -22,7 +23,7 @@ type MotionDetection struct {
 	Adaptor     gobot.Connection
 	MqttAdaptor *mqtt.Adaptor
 
-	Config Config
+	Config config.Config
 }
 
 func (m *MotionDetection) publishMessage(msg []byte) {
@@ -41,14 +42,14 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 			metricsMotionsDetected.WithLabelValues(motion.Config.Location).Inc()
 			metricsMotionTimestamp.WithLabelValues(motion.Config.Location).SetToCurrentTime()
 			motion.publishMessage([]byte("ON"))
-			if motion.Config.LogMotions {
+			if motion.Config.LogSensor {
 				log.Println("Detected motion")
 			}
 		})
 
 		motion.Driver.On(gpio.MotionStopped, func(data interface{}) {
 			motion.publishMessage([]byte("OFF"))
-			if motion.Config.LogMotions {
+			if motion.Config.LogSensor {
 				log.Println("Motion stopped")
 			}
 		})
@@ -67,7 +68,7 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 		adaptors = append(adaptors, motion.MqttAdaptor)
 	}
 
-	return gobot.NewRobot(BotName,
+	return gobot.NewRobot(config.BotName,
 		adaptors,
 		[]gobot.Device{motion.Driver},
 		work,
