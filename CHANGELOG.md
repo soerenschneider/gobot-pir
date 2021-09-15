@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.1.1](https://www.github.com/soerenschneider/gobot-motion-detection/compare/v1.1.0...v1.1.1) (2021-09-14)
+
+
+### Bug Fixes
+
+* use correct mod, change binary name ([3aaee1e](https://www.github.com/soerenschneider/gobot-motion-detection/commit/3aaee1e1a4dc45593fda2b03a49c28c28f931a81))
+
 ## [1.1.0](https://www.github.com/soerenschneider/gobot-motion-detection/compare/v1.0.0...v1.1.0) (2021-09-14)
 
 
