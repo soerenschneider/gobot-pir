@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.1.2](https://www.github.com/soerenschneider/gobot-pir/compare/v1.1.1...v1.1.2) (2021-09-15)
+
+
+### Bug Fixes
+
+* use correct mod, change binary name ([b650851](https://www.github.com/soerenschneider/gobot-pir/commit/b65085147eba291b714670d1e66f84735a280b33))
+
 ### [1.1.1](https://www.github.com/soerenschneider/gobot-motion-detection/compare/v1.1.0...v1.1.1) (2021-09-14)
 
 
