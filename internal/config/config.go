@@ -57,9 +57,9 @@ func ConfigFromEnv() Config {
 		conf.Location = location
 	}
 
-	logValues, err := fromEnvBool("LOG_VALUES")
+	logSensor, err := fromEnvBool("LOG_SENSOR")
 	if err == nil {
-		conf.LogSensor = logValues
+		conf.LogSensor = logSensor
 	}
 
 	intervalSeconds, err := fromEnvInt("INTERVAL_S")
