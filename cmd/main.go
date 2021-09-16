@@ -49,7 +49,7 @@ func getConfig() config.Config {
 	flag.Parse()
 	if configFile == "" {
 		log.Println("Building config from env vars")
-		return config.DefaultConfig()
+		return config.ConfigFromEnv()
 	}
 
 	log.Printf("Reading config from file %s", configFile)
