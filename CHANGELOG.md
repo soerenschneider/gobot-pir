@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.1.3](https://www.github.com/soerenschneider/gobot-pir/compare/v1.1.2...v1.1.3) (2021-09-16)
+
+
+### Bug Fixes
+
+* Build conf from env instead of default values conf ([cddc628](https://www.github.com/soerenschneider/gobot-pir/commit/cddc628595157abaf0bca4c450e3221f1e6ec90b))
+
 ### [1.1.2](https://www.github.com/soerenschneider/gobot-pir/compare/v1.1.1...v1.1.2) (2021-09-15)
 
 
