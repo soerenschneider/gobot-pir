@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.1.3...v1.2.0) (2021-10-08)
+
+
+### Features
+
+* Add heartbeat metric ([b8f2eae](https://www.github.com/soerenschneider/gobot-pir/commit/b8f2eae1bf8899b64145019fcfec5e05fec8980c))
+* Allow reproducible builds ([15e5a4a](https://www.github.com/soerenschneider/gobot-pir/commit/15e5a4a739d81f1c3cf663afff3a81d99b074a9f))
+
+
+### Bug Fixes
+
+* Add missing type ([f3000b4](https://www.github.com/soerenschneider/gobot-pir/commit/f3000b45a588e1ff1dec09ac00d49d6f940c93c0))
+
 ### [1.1.3](https://www.github.com/soerenschneider/gobot-pir/compare/v1.1.2...v1.1.3) (2021-09-16)
 
 
