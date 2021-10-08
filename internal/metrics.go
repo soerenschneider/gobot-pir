@@ -12,6 +12,12 @@ import (
 const namespace = config.BotName
 
 var (
+	metricsHeartbeat = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name:      "heartbeat_timestamp_seconds",
+		Help:      "Heartbeat of this robot",
+	}, []string{"location"})
+
 	metricsMotionsDetected = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Name:      "motions_detected_total",
