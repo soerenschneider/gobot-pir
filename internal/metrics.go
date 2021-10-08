@@ -41,7 +41,7 @@ var (
 
 	metricsMessagePublishErrors = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
-		Name:      "message_publish_errors",
+		Name:      "message_publish_errors_total",
 		Subsystem: "mqtt",
 		Help:      "The assembleBot temperature in degrees Celsius",
 	}, []string{"location"})
