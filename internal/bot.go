@@ -6,6 +6,13 @@ import (
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mqtt"
 	"log"
+	"time"
+)
+
+const (
+	messageOnDetected = "ON"
+	messageOnStopped  = "OFF"
+	heartbeatInterval = time.Duration(60) * time.Second
 )
 
 type PirSensor interface {
@@ -38,17 +45,21 @@ func (m *MotionDetection) publishMessage(msg []byte) {
 func AssembleBot(motion *MotionDetection) *gobot.Robot {
 	errorCnt := 0
 	work := func() {
+		gobot.Every(heartbeatInterval, func() {
+			metricsHeartbeat.WithLabelValues(motion.Config.Location).SetToCurrentTime()
+		})
+
 		motion.Driver.On(gpio.MotionDetected, func(data interface{}) {
 			metricsMotionsDetected.WithLabelValues(motion.Config.Location).Inc()
 			metricsMotionTimestamp.WithLabelValues(motion.Config.Location).SetToCurrentTime()
-			motion.publishMessage([]byte("ON"))
+			motion.publishMessage([]byte(messageOnDetected))
 			if motion.Config.LogSensor {
 				log.Println("Detected motion")
 			}
 		})
 
 		motion.Driver.On(gpio.MotionStopped, func(data interface{}) {
-			motion.publishMessage([]byte("OFF"))
+			motion.publishMessage([]byte(messageOnStopped))
 			if motion.Config.LogSensor {
 				log.Println("Motion stopped")
 			}
@@ -56,7 +67,7 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 
 		motion.Driver.On(gpio.Error, func(data interface{}) {
 			if errorCnt > 10 {
-				log.Fatalf("Too many errors, shutting down")
+				log.Fatalf("Too many errors reading from sensor, shutting down")
 			}
 			errorCnt += 1
 			log.Printf("GPIO error: %v", data)
