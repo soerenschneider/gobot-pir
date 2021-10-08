@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	log.Printf("Started %s, version %s, commit %s, built at %s", config.BotName, internal.BuildVersion, internal.CommitHash, internal.BuildTime)
+	log.Printf("Started %s, version %s, commit %s", config.BotName, internal.BuildVersion, internal.CommitHash)
 	conf := getConfig()
 	err := conf.Validate()
 	conf.Print()
