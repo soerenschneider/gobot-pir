@@ -4,7 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"gobot-pir/internal/config"
+	"github.com/soerenschneider/gobot-pir/internal/config"
 	"log"
 	"net/http"
 )

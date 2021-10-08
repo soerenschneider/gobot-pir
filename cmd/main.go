@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gobot-pir/internal"
-	"gobot-pir/internal/config"
+	"github.com/soerenschneider/gobot-pir/internal"
+	"github.com/soerenschneider/gobot-pir/internal/config"
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mqtt"
 	"gobot.io/x/gobot/platforms/raspi"

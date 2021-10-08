@@ -1,4 +1,4 @@
-module gobot-pir
+module github.com/soerenschneider/gobot-pir
 
 go 1.16
 

@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"gobot-pir/internal/config"
+	"github.com/soerenschneider/gobot-pir/internal/config"
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mqtt"
