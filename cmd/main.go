@@ -9,18 +9,40 @@ import (
 	"gobot.io/x/gobot/platforms/mqtt"
 	"gobot.io/x/gobot/platforms/raspi"
 	"log"
+	"os"
 	"time"
 )
 
+const (
+	cliConfFile = "config"
+	cliVersion  = "version"
+)
+
 func main() {
-	log.Printf("Started %s, version %s, commit %s", config.BotName, internal.BuildVersion, internal.CommitHash)
-	conf := getConfig()
-	err := conf.Validate()
-	conf.Print()
-	if err != nil {
-		log.Fatalf("Could not build config: %v", err)
+	var configFile string
+	flag.StringVar(&configFile, cliConfFile, "", "File to read configuration from")
+	version := flag.Bool(cliVersion, false, "Print version and exit")
+
+	flag.Parse()
+
+	if *version {
+		fmt.Printf("%s (revision %s)", internal.BuildVersion, internal.CommitHash)
+		os.Exit(0)
 	}
 
+	log.Printf("Started %s, version %s, commit %s", config.BotName, internal.BuildVersion, internal.CommitHash)
+	conf := loadConfig(configFile)
+	conf.Print()
+	log.Println("Validating config...")
+	err := conf.Validate()
+	if err != nil {
+		log.Fatalf("Could not validate config: %v", err)
+	}
+
+	run(conf)
+}
+
+func run(conf config.Config) {
 	if conf.MetricConfig != "" {
 		go internal.StartMetricsServer(conf.MetricConfig)
 	}
@@ -37,16 +59,13 @@ func main() {
 	}
 
 	bot := internal.AssembleBot(adaptors)
-	err = bot.Start()
+	err := bot.Start()
 	if err != nil {
 		log.Fatalf("could not start bot: %v", err)
 	}
 }
 
-func getConfig() config.Config {
-	var configFile string
-	flag.StringVar(&configFile, "config", "", "File to read configuration from")
-	flag.Parse()
+func loadConfig(configFile string) config.Config {
 	if configFile == "" {
 		log.Println("Building config from env vars")
 		return config.ConfigFromEnv()
