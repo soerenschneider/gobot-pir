@@ -1,6 +1,6 @@
 BUILD_DIR = builds
 BINARY_NAME = gobot-pir
-MODULE = gobot-pir
+MODULE = github.com/soerenschneider/gobot-pir
 CHECKSUM_FILE = $(BUILD_DIR)/checksum.sha256
 SIGNATURE_KEYFILE = ~/.signify/github.sec
 
