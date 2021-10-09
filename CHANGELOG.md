@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.2.0...v1.3.0) (2021-10-09)
+
+
+### Features
+
+* Add version metric ([ad646e7](https://www.github.com/soerenschneider/gobot-pir/commit/ad646e738c72172439a999d44df6f09fa7f68bfc))
+* Flag to print version and quit ([a569add](https://www.github.com/soerenschneider/gobot-pir/commit/a569addb62fec873836191d6f12e70f68b554f75))
+
 ## [1.2.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.1.3...v1.2.0) (2021-10-08)
 
 
