@@ -43,6 +43,7 @@ func (m *MotionDetection) publishMessage(msg []byte) {
 }
 
 func AssembleBot(motion *MotionDetection) *gobot.Robot {
+	versionInfo.WithLabelValues(BuildVersion, CommitHash).Set(1)
 	errorCnt := 0
 	work := func() {
 		gobot.Every(heartbeatInterval, func() {
