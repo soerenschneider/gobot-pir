@@ -47,4 +47,4 @@ This project exposes the following metrics in Open Metrics format.
 | gobot_motion_detection | sensor    | motions_detected_total             | counter | location | Total amount of detected motions                                  |
 | gobot_motion_detection | sensor    | motions_detected_timestamp_seconds | gauge   | location | Timestamp of the last detected motion                             |
 | gobot_motion_detection | mqtt      | messages_published_total           | counter | location | The amount of published MQTT messages                             |
-| gobot_motion_detection | mqtt      | message_publish_errors             | counter | location | Total amount of errors while trying to publish messages over MQTT |
+| gobot_motion_detection | mqtt      | message_publish_errors_total       | counter | location | Total amount of errors while trying to publish messages over MQTT |
