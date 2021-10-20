@@ -16,6 +16,7 @@ const (
 	defaultLogValues       = false
 	defaultIntervalSeconds = 30
 	defaultMetricConfig    = ":9191"
+	defaultMessageOn       = "ON"
 )
 
 var (
@@ -31,6 +32,8 @@ type Config struct {
 	MetricConfig string `json:"metrics_addr,omitempty"`
 	IntervalSecs int    `json:"interval_s,omitempty"`
 	LogSensor    bool   `json:"log_sensor,omitempty"`
+	MessageOn    string `json:"message_on"`
+	MessageOff   string `json:"message_off"`
 	MqttConfig
 	SensorConfig
 }
@@ -46,6 +49,7 @@ func DefaultConfig() Config {
 		IntervalSecs: defaultIntervalSeconds,
 		MetricConfig: defaultMetricConfig,
 		SensorConfig: defaultSensorConfig(),
+		MessageOn:    "ON",
 	}
 }
 

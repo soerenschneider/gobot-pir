@@ -270,6 +270,7 @@ func TestReadJsonConfig(t *testing.T) {
 					Host:  "tcp://host:1883",
 					Topic: "sensors/%s/brightness",
 				},
+				MessageOn: defaultMessageOn,
 			},
 			wantErr: false,
 		},

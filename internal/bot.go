@@ -10,8 +10,6 @@ import (
 )
 
 const (
-	messageOnDetected = "ON"
-	messageOnStopped  = "OFF"
 	heartbeatInterval = time.Duration(60) * time.Second
 )
 
@@ -53,14 +51,18 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 		motion.Driver.On(gpio.MotionDetected, func(data interface{}) {
 			metricsMotionsDetected.WithLabelValues(motion.Config.Location).Inc()
 			metricsMotionTimestamp.WithLabelValues(motion.Config.Location).SetToCurrentTime()
-			motion.publishMessage([]byte(messageOnDetected))
+			if len(motion.Config.MessageOn) > 0 {
+				motion.publishMessage([]byte(motion.Config.MessageOn))
+			}
 			if motion.Config.LogSensor {
 				log.Println("Detected motion")
 			}
 		})
 
 		motion.Driver.On(gpio.MotionStopped, func(data interface{}) {
-			motion.publishMessage([]byte(messageOnStopped))
+			if len(motion.Config.MessageOff) > 0 {
+				motion.publishMessage([]byte(motion.Config.MessageOff))
+			}
 			if motion.Config.LogSensor {
 				log.Println("Motion stopped")
 			}
