@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.3.0...v1.4.0) (2021-10-20)
+
+
+### Features
+
+* Better control over what to send with mqtt payload ([4328eb4](https://www.github.com/soerenschneider/gobot-pir/commit/4328eb47a8f1af59ae787b7fb0386269298e6b0c))
+
+
+### Bug Fixes
+
+* Enable auto-reconnect to mqtt broker ([58d1cc8](https://www.github.com/soerenschneider/gobot-pir/commit/58d1cc81b9ffc806bc12427acef7842bc1aa4b3a))
+
 ## [1.3.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.2.0...v1.3.0) (2021-10-09)
 
 
