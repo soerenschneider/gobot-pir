@@ -51,6 +51,9 @@ func run(conf config.Config) {
 	driver := gpio.NewPIRMotionDriver(raspberry, conf.GpioPin, time.Millisecond*time.Duration(conf.GpioPollingIntervalMs))
 	clientId := fmt.Sprintf("%s_%s", config.BotName, conf.Location)
 	mqttAdaptor := mqtt.NewAdaptor(conf.MqttConfig.Host, clientId)
+	mqttAdaptor.SetAutoReconnect(true)
+	mqttAdaptor.SetQoS(1)
+
 	adaptors := &internal.MotionDetection{
 		Driver:      driver,
 		Adaptor:     raspberry,
