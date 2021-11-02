@@ -15,10 +15,10 @@ build: version-info
 
 release: clean version-info cross-build
 	sha256sum $(BUILD_DIR)/$(BINARY_NAME)-* > $(CHECKSUM_FILE)
-	gh-upload-assets -o soerenschneider -r gobot-pir -f ~/.gh-token builds
 
 signed-release: release
 	pass keys/signify/github | signify -S -s $(SIGNATURE_KEYFILE) -m $(CHECKSUM_FILE)
+	gh-upload-assets -o soerenschneider -r gobot-pir -f ~/.gh-token builds
 
 cross-build:
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0       go build -ldflags="-X '$(MODULE)/internal.BuildVersion=${VERSION}' -X '$(MODULE)/internal.CommitHash=${COMMIT_HASH}'" -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64    cmd/main.go
