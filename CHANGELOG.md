@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.4.1](https://www.github.com/soerenschneider/gobot-pir/compare/v1.4.0...v1.4.1) (2021-11-02)
+
+
+### Miscellaneous Chores
+
+* Trigger release ([ead1bf8](https://www.github.com/soerenschneider/gobot-pir/commit/ead1bf8581321f8bd66d95185d325bbcff588800))
+
 ## [1.4.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.3.0...v1.4.0) (2021-10-20)
 
 
