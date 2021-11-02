@@ -30,6 +30,13 @@ version-info:
 	$(eval VERSION := $(shell git describe --tags --abbrev=0 || echo "dev"))
 	$(eval COMMIT_HASH := $(shell git rev-parse HEAD))
 
+pre-commit-init:
+	pre-commit install
+	pre-commit install --hook-type commit-msg
+
+pre-commit-update:
+	pre-commit autoupdate
+
 coverage:
 	go test ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -html=coverage.out -o=coverage.html
