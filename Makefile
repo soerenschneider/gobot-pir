@@ -15,6 +15,7 @@ build: version-info
 
 release: clean version-info cross-build
 	sha256sum $(BUILD_DIR)/$(BINARY_NAME)-* > $(CHECKSUM_FILE)
+	gh-upload-assets -o soerenschneider -r gobot-pir -f ~/.gh-token builds
 
 signed-release: release
 	pass keys/signify/github | signify -S -s $(SIGNATURE_KEYFILE) -m $(CHECKSUM_FILE)
