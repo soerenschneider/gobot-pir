@@ -34,9 +34,9 @@ type MotionDetection struct {
 func (m *MotionDetection) publishMessage(msg []byte) {
 	success := m.MqttAdaptor.Publish(m.Config.Topic, msg)
 	if success {
-		metricsMessagesPublished.WithLabelValues(m.Config.Location).Inc()
+		metricsMessagesPublished.WithLabelValues(m.Config.Placement).Inc()
 	} else {
-		metricsMessagePublishErrors.WithLabelValues(m.Config.Location).Inc()
+		metricsMessagePublishErrors.WithLabelValues(m.Config.Placement).Inc()
 	}
 }
 
@@ -45,12 +45,12 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 	errorCnt := 0
 	work := func() {
 		gobot.Every(heartbeatInterval, func() {
-			metricsHeartbeat.WithLabelValues(motion.Config.Location).SetToCurrentTime()
+			metricsHeartbeat.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
 		})
 
 		motion.Driver.On(gpio.MotionDetected, func(data interface{}) {
-			metricsMotionsDetected.WithLabelValues(motion.Config.Location).Inc()
-			metricsMotionTimestamp.WithLabelValues(motion.Config.Location).SetToCurrentTime()
+			metricsMotionsDetected.WithLabelValues(motion.Config.Placement).Inc()
+			metricsMotionTimestamp.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
 			if len(motion.Config.MessageOn) > 0 {
 				motion.publishMessage([]byte(motion.Config.MessageOn))
 			}

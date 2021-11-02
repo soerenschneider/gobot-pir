@@ -22,35 +22,35 @@ var (
 		Namespace: namespace,
 		Name:      "heartbeat_timestamp_seconds",
 		Help:      "Heartbeat of this robot",
-	}, []string{"location"})
+	}, []string{"placement"})
 
 	metricsMotionsDetected = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Name:      "motions_detected_total",
 		Subsystem: "sensor",
 		Help:      "Amount of motions detected",
-	}, []string{"location"})
+	}, []string{"placement"})
 
 	metricsMotionTimestamp = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Name:      "motions_detected_timestamp_seconds",
 		Subsystem: "sensor",
 		Help:      "Timestamp of latest motion detected",
-	}, []string{"location"})
+	}, []string{"placement"})
 
 	metricsMessagesPublished = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Name:      "messages_published_total",
 		Subsystem: "mqtt",
 		Help:      "The assembleBot temperature in degrees Celsius",
-	}, []string{"location"})
+	}, []string{"placement"})
 
 	metricsMessagePublishErrors = promauto.NewCounterVec(prometheus.CounterOpts{
 		Namespace: namespace,
 		Name:      "message_publish_errors_total",
 		Subsystem: "mqtt",
 		Help:      "The assembleBot temperature in degrees Celsius",
-	}, []string{"location"})
+	}, []string{"placement"})
 )
 
 func StartMetricsServer(listenAddr string) {

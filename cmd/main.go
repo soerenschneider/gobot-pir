@@ -49,7 +49,7 @@ func run(conf config.Config) {
 
 	raspberry := raspi.NewAdaptor()
 	driver := gpio.NewPIRMotionDriver(raspberry, conf.GpioPin, time.Millisecond*time.Duration(conf.GpioPollingIntervalMs))
-	clientId := fmt.Sprintf("%s_%s", config.BotName, conf.Location)
+	clientId := fmt.Sprintf("%s_%s", config.BotName, conf.Placement)
 	mqttAdaptor := mqtt.NewAdaptor(conf.MqttConfig.Host, clientId)
 	mqttAdaptor.SetAutoReconnect(true)
 	mqttAdaptor.SetQoS(1)

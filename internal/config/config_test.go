@@ -143,7 +143,7 @@ func Test_fromEnvInt(t *testing.T) {
 
 func TestConfig_Validate(t *testing.T) {
 	type fields struct {
-		Location              string
+		Placement             string
 		MetricConfig          string
 		FirmAtaPort           string
 		GpioPin               string
@@ -160,7 +160,7 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "all okay",
 			fields: fields{
-				Location:              "location",
+				Placement:             "Placement",
 				MetricConfig:          ":9100",
 				FirmAtaPort:           "/dev/ttyUSB0",
 				GpioPin:               "5",
@@ -193,7 +193,7 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing gpiopin",
 			fields: fields{
-				Location:              "loc",
+				Placement:             "loc",
 				MetricConfig:          ":9100",
 				GpioPollingIntervalMs: 75,
 				IntervalSecs:          30,
@@ -208,7 +208,7 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "missing host",
 			fields: fields{
-				Location:              "loc",
+				Placement:             "loc",
 				MetricConfig:          ":9100",
 				GpioPin:               "5",
 				GpioPollingIntervalMs: 75,
@@ -224,7 +224,7 @@ func TestConfig_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Config{
-				Location:     tt.fields.Location,
+				Placement:    tt.fields.Placement,
 				MetricConfig: tt.fields.MetricConfig,
 				SensorConfig: SensorConfig{
 					GpioPin:               tt.fields.GpioPin,
@@ -258,7 +258,7 @@ func TestReadJsonConfig(t *testing.T) {
 			name:     "example-config",
 			filePath: "../../contrib/example-config.json",
 			want: &Config{
-				Location:     "loc",
+				Placement:    "loc",
 				MetricConfig: defaultMetricConfig,
 				SensorConfig: SensorConfig{
 					GpioPin:               defaultGpioPin,
@@ -331,7 +331,7 @@ func Test_matchTopic(t *testing.T) {
 
 func TestConfig_TemplateTopic(t *testing.T) {
 	type fields struct {
-		Location   string
+		Placement  string
 		MqttConfig MqttConfig
 	}
 	tests := []struct {
@@ -342,13 +342,13 @@ func TestConfig_TemplateTopic(t *testing.T) {
 		{
 			name: "template",
 			fields: fields{
-				Location: "loc",
+				Placement: "loc",
 				MqttConfig: MqttConfig{
 					Topic: "prefix/%s",
 				},
 			},
 			want: &Config{
-				Location: "loc",
+				Placement: "loc",
 				MqttConfig: MqttConfig{
 					Topic: "prefix/loc",
 				},
@@ -357,13 +357,13 @@ func TestConfig_TemplateTopic(t *testing.T) {
 		{
 			name: "no templating",
 			fields: fields{
-				Location: "loc",
+				Placement: "loc",
 				MqttConfig: MqttConfig{
 					Topic: "prefix",
 				},
 			},
 			want: &Config{
-				Location: "loc",
+				Placement: "loc",
 				MqttConfig: MqttConfig{
 					Topic: "prefix",
 				},
@@ -373,7 +373,7 @@ func TestConfig_TemplateTopic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			conf := &Config{
-				Location:   tt.fields.Location,
+				Placement:  tt.fields.Placement,
 				MqttConfig: tt.fields.MqttConfig,
 			}
 			conf.FormatTopic()
