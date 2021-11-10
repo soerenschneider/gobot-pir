@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/soerenschneider/gobot-motion-detection)](https://goreportcard.com/report/github.com/soerenschneider/gobot-motion-detection)
+[![Go Report Card](https://goreportcard.com/badge/github.com/soerenschneider/gobot-pir)](https://goreportcard.com/report/github.com/soerenschneider/gobot-pir)
 
 This project uses the [Gobot Framework](https://gobot.io/) in combination with a [PIR sensor](https://gobot.io/documentation/drivers/pir-motion-sensor/) to work as a configurable motion detection bot, being able to send simple events via MQTT and exposing machine readable metrics in the Open Metrics Format.
 
