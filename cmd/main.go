@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not validate config: %v", err)
 	}
-
+	conf.FormatTopic()
 	run(conf)
 }
 
