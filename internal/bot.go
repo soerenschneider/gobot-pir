@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/soerenschneider/gobot-pir/internal/config"
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/drivers/gpio"
@@ -40,17 +42,30 @@ func (m *MotionDetection) publishMessage(msg []byte) {
 	}
 }
 
+func (m *MotionDetection) publishStatsMessage(stats map[string]int) error {
+	msg, err := json.Marshal(stats)
+	if err != nil {
+		return fmt.Errorf("could not publish stats message: %v", err)
+	}
+
+	success := m.MqttAdaptor.Publish(m.Config.StatsTopic, msg)
+	if success {
+		metricsMessagesPublished.WithLabelValues(m.Config.Placement).Inc()
+	} else {
+		metricsMessagePublishErrors.WithLabelValues(m.Config.Placement).Inc()
+	}
+	return nil
+}
+
 func AssembleBot(motion *MotionDetection) *gobot.Robot {
 	versionInfo.WithLabelValues(BuildVersion, CommitHash).Set(1)
 	errorCnt := 0
+	stats := NewSensorStats()
 	work := func() {
-		gobot.Every(heartbeatInterval, func() {
-			metricsHeartbeat.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
-		})
-
 		motion.Driver.On(gpio.MotionDetected, func(data interface{}) {
 			metricsMotionsDetected.WithLabelValues(motion.Config.Placement).Inc()
 			metricsMotionTimestamp.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
+			stats.NewEvent()
 			if len(motion.Config.MessageOn) > 0 {
 				motion.publishMessage([]byte(motion.Config.MessageOn))
 			}
@@ -75,6 +90,29 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 			errorCnt += 1
 			log.Printf("GPIO error: %v", data)
 		})
+
+		gobot.Every(heartbeatInterval, func() {
+			metricsHeartbeat.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
+		})
+
+		if len(motion.Config.MqttConfig.StatsTopic) != 0 && len(motion.Config.StatIntervals) > 0 {
+			min, _ := motion.Config.GetStatIntervalMin()
+			max, _ := motion.Config.GetStatIntervalMax()
+
+			gobot.Every(time.Duration(min)*time.Second, func() {
+				statsDict := map[string]int{}
+				for _, stat := range motion.Config.StatIntervals {
+					count := stats.GetEventCountNewerThan(time.Duration(stat) * time.Second)
+					key := fmt.Sprintf("%ds", stat)
+					statsDict[key] = count
+					metricsStats.WithLabelValues(key, motion.Config.Placement).Set(float64(count))
+				}
+
+				stats.PurgeEventsBefore(time.Now().Add(time.Duration(-max) * time.Second))
+				metricsStatsSliceSize.WithLabelValues(motion.Config.Placement).Set(float64(stats.GetStatsSliceSize()))
+				motion.publishStatsMessage(statsDict)
+			})
+		}
 	}
 
 	adaptors := []gobot.Connection{motion.Adaptor}

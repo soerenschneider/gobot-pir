@@ -268,8 +268,10 @@ func TestReadJsonConfig(t *testing.T) {
 				LogSensor:    defaultLogValues,
 				MqttConfig: MqttConfig{
 					Host:  "tcp://host:1883",
-					Topic: "sensors/%s/brightness",
+					Topic: "sensors/pir",
+					StatsTopic: "sensors/pir/stats",
 				},
+				StatIntervals: []int{1,2,3},
 				MessageOn: defaultMessageOn,
 			},
 			wantErr: false,

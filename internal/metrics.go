@@ -51,6 +51,20 @@ var (
 		Subsystem: "mqtt",
 		Help:      "The assembleBot temperature in degrees Celsius",
 	}, []string{"placement"})
+
+	metricsStats = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name:      "events_per_interval",
+		Subsystem: "stats",
+		Help:      "The number of events during given intervals",
+	}, []string{"interval", "placement"})
+
+	metricsStatsSliceSize = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name:      "slice_entries_total",
+		Subsystem: "stats",
+		Help:      "The amount of entries in the stats slice",
+	}, []string{"placement"})
 )
 
 func StartMetricsServer(listenAddr string) {

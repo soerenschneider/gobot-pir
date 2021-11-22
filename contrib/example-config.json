@@ -1,5 +1,7 @@
 {
   "placement": "loc",
   "mqtt_host": "tcp://host:1883",
-  "mqtt_topic": "sensors/%s/brightness"
+  "mqtt_topic": "sensors/pir",
+  "mqtt_stats_topic": "sensors/pir/stats",
+  "stat_intervals": [1, 2, 3]
 }
