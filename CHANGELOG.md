@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.4.1...v1.5.0) (2021-11-22)
+
+
+### Features
+
+* Collect statistics over configurable intervals ([d61b5e0](https://www.github.com/soerenschneider/gobot-pir/commit/d61b5e0f0e6e933a3b880f4b1c3e58159217f29d))
+
+
+### Bug Fixes
+
+* Forgot to call FormatTopics ([8863854](https://www.github.com/soerenschneider/gobot-pir/commit/8863854c136998affc225522f1df1853a84c22a3))
+
 ### [1.4.1](https://www.github.com/soerenschneider/gobot-pir/compare/v1.4.0...v1.4.1) (2021-11-02)
 
 
