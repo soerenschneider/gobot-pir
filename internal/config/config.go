@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -20,15 +19,7 @@ const (
 	maxStatsBucketSeconds  = 7200
 )
 
-var (
-	// This regex is not a very strict check, we don't validate hostname or ip (v4, v6) addresses...
-	mqttHostRegex = regexp.MustCompile(`^\w{3,}://.{3,}:\d{2,5}$`)
-
-	// We don't care that technically it's allowed to start with a slash
-	mqttTopicRegex = regexp.MustCompile("^([\\w%]+)(/[\\w%]+)*$")
-
-	defaultStatsBucketsSeconds = []int{5, 15, 30, 60, 120, 300, 600, 1800}
-)
+var defaultStatsBucketsSeconds = []int{5, 15, 30, 60, 120, 300, 600, 1800}
 
 type Config struct {
 	Placement     string `json:"placement,omitempty"`
@@ -40,12 +31,6 @@ type Config struct {
 	MessageOff    string `json:"message_off"`
 	MqttConfig
 	SensorConfig
-}
-
-type MqttConfig struct {
-	Host       string `json:"mqtt_host,omitempty"`
-	Topic      string `json:"mqtt_topic,omitempty"`
-	StatsTopic string `json:"mqtt_stats_topic,omitempty"`
 }
 
 func DefaultConfig() Config {
@@ -77,27 +62,13 @@ func ConfigFromEnv() Config {
 		conf.IntervalSecs = intervalSeconds
 	}
 
-	mqttHost, err := fromEnv("MQTT_HOST")
-	if err == nil {
-		conf.Host = mqttHost
-	}
-
-	mqttTopic, err := fromEnv("MQTT_TOPIC")
-	if err == nil {
-		conf.Topic = mqttTopic
-	}
-
-	mqttStatsTopic, err := fromEnv("MQTT_STATS_TOPIC")
-	if err == nil {
-		conf.StatsTopic = mqttStatsTopic
-	}
-
 	metricConfig, err := fromEnv("METRICS_ADDR")
 	if err == nil {
 		conf.MetricConfig = metricConfig
 	}
 
 	conf.SensorConfig.ConfigFromEnv()
+	conf.MqttConfig.ConfigFromEnv()
 
 	return conf
 }
@@ -138,11 +109,7 @@ func (conf *Config) Validate() error {
 		}
 	}
 
-	if err := matchTopic(conf.Topic); err != nil {
-		return errors.New("invalid mqtt topic provided")
-	}
-
-	if err := matchHost(conf.MqttConfig.Host); err != nil {
+	if err := conf.MqttConfig.Validate(); err != nil {
 		return err
 	}
 
@@ -160,15 +127,12 @@ func (conf *Config) Print() {
 	log.Printf("LogSensor=%t", conf.LogSensor)
 	log.Printf("MetricConfig=%s", conf.MetricConfig)
 	log.Printf("IntervalSecs=%d", conf.IntervalSecs)
-	log.Printf("Host=%s", conf.Host)
-	log.Printf("Topic=%s", conf.Topic)
-	if len(conf.MqttConfig.StatsTopic) > 0 {
-		log.Printf("StatsTopic=%s", conf.Topic)
-	}
+
 	if len(conf.StatIntervals) > 0 {
 		log.Printf("StatIntervals=%v", conf.StatIntervals)
 	}
 
+	conf.MqttConfig.Print()
 	conf.SensorConfig.Print()
 
 	log.Println("-----------------")

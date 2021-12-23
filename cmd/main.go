@@ -10,6 +10,7 @@ import (
 	"gobot.io/x/gobot/platforms/raspi"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -50,9 +51,19 @@ func run(conf config.Config) {
 	raspberry := raspi.NewAdaptor()
 	driver := gpio.NewPIRMotionDriver(raspberry, conf.GpioPin, time.Millisecond*time.Duration(conf.GpioPollingIntervalMs))
 	clientId := fmt.Sprintf("%s_%s", config.BotName, conf.Placement)
-	mqttAdaptor := mqtt.NewAdaptor(conf.MqttConfig.Host, clientId)
+
+	var mqttAdaptor *mqtt.Adaptor
+	if conf.MqttConfig.UsesAuth() {
+		mqttAdaptor = mqtt.NewAdaptorWithAuth(conf.MqttConfig.Host, clientId, conf.Username, conf.Password)
+	} else {
+		mqttAdaptor = mqtt.NewAdaptor(conf.MqttConfig.Host, clientId)
+	}
 	mqttAdaptor.SetAutoReconnect(true)
 	mqttAdaptor.SetQoS(1)
+	if strings.HasSuffix(conf.MqttConfig.Host, ":8883") {
+		log.Println("Using SSL to connect to broker")
+		mqttAdaptor.SetUseSSL(true)
+	}
 
 	adaptors := &internal.MotionDetection{
 		Driver:      driver,
