@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -21,12 +20,6 @@ const (
 )
 
 var (
-	// This regex is not a very strict check, we don't validate hostname or ip (v4, v6) addresses...
-	mqttHostRegex = regexp.MustCompile(`^\w{3,}://.{3,}:\d{2,5}$`)
-
-	// We don't care that technically it's allowed to start with a slash
-	mqttTopicRegex = regexp.MustCompile("^([\\w%]+)(/[\\w%]+)*$")
-
 	defaultStatsBucketsSeconds = []int{5, 15, 30, 60, 120, 300, 600, 1800}
 )
 
@@ -40,12 +33,6 @@ type Config struct {
 	MessageOff    string `json:"message_off"`
 	MqttConfig
 	SensorConfig
-}
-
-type MqttConfig struct {
-	Host       string `json:"mqtt_host,omitempty"`
-	Topic      string `json:"mqtt_topic,omitempty"`
-	StatsTopic string `json:"mqtt_stats_topic,omitempty"`
 }
 
 func DefaultConfig() Config {
@@ -97,6 +84,16 @@ func ConfigFromEnv() Config {
 		conf.MetricConfig = metricConfig
 	}
 
+	clientKeyFile, err := fromEnv("SSL_CLIENT_KEY_FILE")
+	if err == nil {
+		conf.ClientKeyFile = clientKeyFile
+	}
+
+	clientCertFile, err := fromEnv("SSL_CLIENT_CERT_FILE")
+	if err == nil {
+		conf.ClientCertFile = clientCertFile
+	}
+
 	conf.SensorConfig.ConfigFromEnv()
 
 	return conf
@@ -138,14 +135,6 @@ func (conf *Config) Validate() error {
 		}
 	}
 
-	if err := matchTopic(conf.Topic); err != nil {
-		return errors.New("invalid mqtt topic provided")
-	}
-
-	if err := matchHost(conf.MqttConfig.Host); err != nil {
-		return err
-	}
-
 	if err := conf.SensorConfig.Validate(); err != nil {
 		return err
 	}
@@ -162,30 +151,15 @@ func (conf *Config) Print() {
 	log.Printf("IntervalSecs=%d", conf.IntervalSecs)
 	log.Printf("Host=%s", conf.Host)
 	log.Printf("Topic=%s", conf.Topic)
-	if len(conf.MqttConfig.StatsTopic) > 0 {
-		log.Printf("StatsTopic=%s", conf.Topic)
-	}
+
 	if len(conf.StatIntervals) > 0 {
 		log.Printf("StatIntervals=%v", conf.StatIntervals)
 	}
 
 	conf.SensorConfig.Print()
+	conf.MqttConfig.Print()
 
 	log.Println("-----------------")
-}
-
-func matchTopic(topic string) error {
-	if !mqttTopicRegex.MatchString(topic) {
-		return fmt.Errorf("invalid topic format used")
-	}
-	return nil
-}
-
-func matchHost(host string) error {
-	if !mqttHostRegex.Match([]byte(host)) {
-		return fmt.Errorf("invalid host format used")
-	}
-	return nil
 }
 
 func computeEnvName(name string) string {
@@ -225,16 +199,6 @@ func fromEnvBool(name string) (bool, error) {
 		return false, err
 	}
 	return parsed, nil
-}
-
-func (conf *Config) FormatTopic() {
-	if strings.Contains(conf.Topic, "%s") {
-		conf.Topic = fmt.Sprintf(conf.Topic, conf.Placement)
-	}
-
-	if strings.Contains(conf.StatsTopic, "%s") {
-		conf.StatsTopic = fmt.Sprintf(conf.StatsTopic, conf.Placement)
-	}
 }
 
 func (conf *Config) GetStatIntervalMin() (int, error) {
