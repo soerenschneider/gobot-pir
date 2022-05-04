@@ -10,7 +10,7 @@ const maxEvents = 2048
 
 type SensorStats struct {
 	events []time.Time
-	m sync.Mutex
+	m      sync.Mutex
 }
 
 func NewSensorStats() *SensorStats {
