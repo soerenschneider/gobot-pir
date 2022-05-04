@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.5.0...v1.6.0) (2022-05-04)
+
+
+### Features
+
+* enable tls client cert auth ([e2907ff](https://www.github.com/soerenschneider/gobot-pir/commit/e2907ffcbcebab2046a2e747d6c5e584787e081c))
+
 ## [1.5.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.4.1...v1.5.0) (2021-11-22)
 
 
