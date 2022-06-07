@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/soerenschneider/gobot-pir/compare/v1.6.0...v1.6.1) (2022-06-07)
+
+
+### Bug Fixes
+
+* call validate() on mqttconfig ([af945e3](https://github.com/soerenschneider/gobot-pir/commit/af945e3c9c7a75a9078eaa5f15022eaa325940fd))
+
 ## [1.6.0](https://www.github.com/soerenschneider/gobot-pir/compare/v1.5.0...v1.6.0) (2022-05-04)
 
 
