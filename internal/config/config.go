@@ -139,7 +139,7 @@ func (conf *Config) Validate() error {
 		return err
 	}
 
-	return nil
+	return conf.MqttConfig.Validate()
 }
 
 func (conf *Config) Print() {
