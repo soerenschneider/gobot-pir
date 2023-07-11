@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/soerenschneider/gobot-pir/internal"
-	"github.com/soerenschneider/gobot-pir/internal/config"
-	"gobot.io/x/gobot/drivers/gpio"
-	"gobot.io/x/gobot/platforms/mqtt"
-	"gobot.io/x/gobot/platforms/raspi"
 	"log"
 	"os"
 	"time"
+
+	"github.com/soerenschneider/gobot-pir/internal"
+	"github.com/soerenschneider/gobot-pir/internal/config"
+	"gobot.io/x/gobot/v2/drivers/gpio"
+	"gobot.io/x/gobot/v2/platforms/mqtt"
+	"gobot.io/x/gobot/v2/platforms/raspi"
 )
 
 const (

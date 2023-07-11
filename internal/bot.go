@@ -3,12 +3,13 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/soerenschneider/gobot-pir/internal/config"
-	"gobot.io/x/gobot"
-	"gobot.io/x/gobot/drivers/gpio"
-	"gobot.io/x/gobot/platforms/mqtt"
 	"log"
 	"time"
+
+	"github.com/soerenschneider/gobot-pir/internal/config"
+	"gobot.io/x/gobot/v2"
+	"gobot.io/x/gobot/v2/drivers/gpio"
+	"gobot.io/x/gobot/v2/platforms/mqtt"
 )
 
 const (
