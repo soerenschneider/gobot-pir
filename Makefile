@@ -5,7 +5,7 @@ CHECKSUM_FILE = $(BUILD_DIR)/checksum.sha256
 SIGNATURE_KEYFILE = ~/.signify/github.sec
 
 tests:
-	go test ./...
+	go test ./... -race
 
 clean:
 	rm -rf ./$(BUILD_DIR)
