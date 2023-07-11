@@ -63,7 +63,7 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 	errorCnt := 0
 	stats := NewSensorStats()
 	work := func() {
-		motion.Driver.On(gpio.MotionDetected, func(data interface{}) {
+		err := motion.Driver.On(gpio.MotionDetected, func(data interface{}) {
 			metricsMotionsDetected.WithLabelValues(motion.Config.Placement).Inc()
 			metricsMotionTimestamp.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
 			stats.NewEvent()
@@ -74,8 +74,11 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 				log.Println("Detected motion")
 			}
 		})
+		if err != nil {
+			log.Printf("error for '%s' event: %v", gpio.MotionDetected, err)
+		}
 
-		motion.Driver.On(gpio.MotionStopped, func(data interface{}) {
+		err = motion.Driver.On(gpio.MotionStopped, func(data interface{}) {
 			if len(motion.Config.MessageOff) > 0 {
 				motion.publishMessage([]byte(motion.Config.MessageOff))
 			}
@@ -83,14 +86,20 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 				log.Println("Motion stopped")
 			}
 		})
+		if err != nil {
+			log.Printf("error for '%s' event: %v", gpio.MotionStopped, err)
+		}
 
-		motion.Driver.On(gpio.Error, func(data interface{}) {
+		err = motion.Driver.On(gpio.Error, func(data interface{}) {
 			if errorCnt > 10 {
 				log.Fatalf("Too many errors reading from sensor, shutting down")
 			}
 			errorCnt += 1
 			log.Printf("GPIO error: %v", data)
 		})
+		if err != nil {
+			log.Printf("error for '%s' event: %v", gpio.Error, err)
+		}
 
 		gobot.Every(heartbeatInterval, func() {
 			metricsHeartbeat.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
@@ -111,7 +120,9 @@ func AssembleBot(motion *MotionDetection) *gobot.Robot {
 
 				stats.PurgeEventsBefore(time.Now().Add(time.Duration(-max) * time.Second))
 				metricsStatsSliceSize.WithLabelValues(motion.Config.Placement).Set(float64(stats.GetStatsSliceSize()))
-				motion.publishStatsMessage(statsDict)
+				if err := motion.publishStatsMessage(statsDict); err != nil {
+					log.Printf("could not publish message: %v", err)
+				}
 			})
 		}
 	}
