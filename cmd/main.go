@@ -44,8 +44,8 @@ func main() {
 }
 
 func run(conf config.Config) {
-	if conf.MetricConfig != "" {
-		go internal.StartMetricsServer(conf.MetricConfig)
+	if conf.MetricsAddr != "" {
+		go internal.StartMetricsServer(conf.MetricsAddr)
 	}
 
 	raspberry := raspi.NewAdaptor()

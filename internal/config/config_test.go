@@ -224,8 +224,8 @@ func TestConfig_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Config{
-				Placement:    tt.fields.Placement,
-				MetricConfig: tt.fields.MetricConfig,
+				Placement:   tt.fields.Placement,
+				MetricsAddr: tt.fields.MetricConfig,
 				SensorConfig: SensorConfig{
 					GpioPin:               tt.fields.GpioPin,
 					GpioPollingIntervalMs: tt.fields.GpioPollingIntervalMs,
@@ -258,8 +258,8 @@ func TestReadJsonConfig(t *testing.T) {
 			name:     "example-config",
 			filePath: "../../contrib/example-config.json",
 			want: &Config{
-				Placement:    "loc",
-				MetricConfig: defaultMetricConfig,
+				Placement:   "loc",
+				MetricsAddr: defaultMetricConfig,
 				SensorConfig: SensorConfig{
 					GpioPin:               defaultGpioPin,
 					GpioPollingIntervalMs: defaultGpioPollingIntervalMs,

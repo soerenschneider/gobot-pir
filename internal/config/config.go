@@ -25,7 +25,7 @@ var (
 
 type Config struct {
 	Placement     string `json:"placement,omitempty"`
-	MetricConfig  string `json:"metrics_addr,omitempty"`
+	MetricsAddr   string `json:"metrics_addr,omitempty"`
 	IntervalSecs  int    `json:"interval_s,omitempty"`
 	StatIntervals []int  `json:"stat_intervals,omitempty"`
 	LogSensor     bool   `json:"log_sensor,omitempty"`
@@ -40,7 +40,7 @@ func DefaultConfig() Config {
 		LogSensor:     defaultLogValues,
 		IntervalSecs:  defaultIntervalSeconds,
 		StatIntervals: defaultStatsBucketsSeconds,
-		MetricConfig:  defaultMetricConfig,
+		MetricsAddr:   defaultMetricConfig,
 		SensorConfig:  defaultSensorConfig(),
 		MessageOn:     "ON",
 	}
@@ -81,7 +81,7 @@ func ConfigFromEnv() Config {
 
 	metricConfig, err := fromEnv("METRICS_ADDR")
 	if err == nil {
-		conf.MetricConfig = metricConfig
+		conf.MetricsAddr = metricConfig
 	}
 
 	clientKeyFile, err := fromEnv("SSL_CLIENT_KEY_FILE")
@@ -147,7 +147,7 @@ func (conf *Config) Print() {
 	log.Println("Configuration:")
 	log.Printf("Placement=%s", conf.Placement)
 	log.Printf("LogSensor=%t", conf.LogSensor)
-	log.Printf("MetricConfig=%s", conf.MetricConfig)
+	log.Printf("MetricsAddr=%s", conf.MetricsAddr)
 	log.Printf("IntervalSecs=%d", conf.IntervalSecs)
 	log.Printf("Host=%s", conf.Host)
 	log.Printf("Topic=%s", conf.Topic)
