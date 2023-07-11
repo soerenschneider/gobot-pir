@@ -13,7 +13,7 @@ var (
 	mqttHostRegex = regexp.MustCompile(`^\w{3,}://.{3,}:\d{2,5}$`)
 
 	// We don't care that technically it's allowed to start with a slash
-	mqttTopicRegex = regexp.MustCompile("^([\\w%]+)(/[\\w%]+)*$")
+	mqttTopicRegex = regexp.MustCompile(`^([\w%]+)(/[\w%]+)*$`)
 )
 
 type MqttConfig struct {
