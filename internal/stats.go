@@ -10,7 +10,7 @@ const maxEvents = 2048
 
 type SensorStats struct {
 	events []time.Time
-	m      sync.Mutex
+	m      sync.RWMutex
 }
 
 func NewSensorStats() *SensorStats {
@@ -31,14 +31,14 @@ func (s *SensorStats) NewEvent() {
 }
 
 func (s *SensorStats) GetStatsSliceSize() int {
-	s.m.Lock()
-	defer s.m.Unlock()
+	s.m.RLock()
+	defer s.m.RUnlock()
 	return len(s.events)
 }
 
 func (s *SensorStats) GetEventCountNewerThan(window time.Duration) int {
-	s.m.Lock()
-	defer s.m.Unlock()
+	s.m.RLock()
+	defer s.m.RUnlock()
 	idx := s.getIndexOfEventsNewerThan(time.Now().Add(-window))
 	return len(s.events) - idx
 }
