@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/soerenschneider/gobot-pir/compare/v1.6.1...v1.6.2) (2023-07-11)
+
+
+### Bug Fixes
+
+* import ([f18eb2a](https://github.com/soerenschneider/gobot-pir/commit/f18eb2a420fc946318fcab6acd41815b23a94cfe))
+
 ## [1.6.1](https://github.com/soerenschneider/gobot-pir/compare/v1.6.0...v1.6.1) (2022-06-07)
 
 
