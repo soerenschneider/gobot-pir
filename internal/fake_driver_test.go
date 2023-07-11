@@ -1,6 +1,6 @@
 package internal
 
-import "gobot.io/x/gobot"
+import "gobot.io/x/gobot/v2"
 
 type eventChannel chan *gobot.Event
 
