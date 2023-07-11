@@ -71,6 +71,7 @@ func run(conf config.Config) {
 		Adaptor:     raspberry,
 		MqttAdaptor: mqttAdaptor,
 		Config:      conf,
+		Stats:       internal.NewSensorStats(),
 	}
 
 	bot := internal.AssembleBot(adaptors)

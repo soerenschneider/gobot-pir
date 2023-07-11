@@ -30,6 +30,8 @@ type MotionDetection struct {
 	Driver      *gpio.PIRMotionDriver
 	Adaptor     gobot.Connection
 	MqttAdaptor *mqtt.Adaptor
+	Stats       *SensorStats
+	errorCount  int
 
 	Config config.Config
 }
@@ -58,73 +60,76 @@ func (m *MotionDetection) publishStatsMessage(stats map[string]int) error {
 	return nil
 }
 
+func (m *MotionDetection) motionDetected(data interface{}) {
+	metricsMotionsDetected.WithLabelValues(m.Config.Placement).Inc()
+	metricsMotionTimestamp.WithLabelValues(m.Config.Placement).SetToCurrentTime()
+	m.Stats.NewEvent()
+	if len(m.Config.MessageOn) > 0 {
+		m.publishMessage([]byte(m.Config.MessageOn))
+	}
+	if m.Config.LogSensor {
+		log.Println("Detected motion")
+	}
+}
+
+func (m *MotionDetection) motionStopped(data interface{}) {
+	if len(m.Config.MessageOff) > 0 {
+		m.publishMessage([]byte(m.Config.MessageOff))
+	}
+	if m.Config.LogSensor {
+		log.Println("Motion stopped")
+	}
+}
+
+func (m *MotionDetection) onError(data interface{}) {
+	if m.errorCount > 10 {
+		log.Fatalf("Too many errors reading from sensor, shutting down")
+	}
+
+	m.errorCount += 1
+	log.Printf("GPIO error: %v", data)
+}
+
+func (m *MotionDetection) Send() {
+	statsDict := map[string]int{}
+	for _, stat := range m.Config.StatIntervals {
+		count := m.Stats.GetEventCountNewerThan(time.Duration(stat) * time.Second)
+		key := fmt.Sprintf("%ds", stat)
+		statsDict[key] = count
+		metricsStats.WithLabelValues(key, m.Config.Placement).Set(float64(count))
+	}
+
+	max, _ := m.Config.GetStatIntervalMax()
+	m.Stats.PurgeEventsBefore(time.Now().Add(time.Duration(-max) * time.Second))
+	metricsStatsSliceSize.WithLabelValues(m.Config.Placement).Set(float64(m.Stats.GetStatsSliceSize()))
+	if err := m.publishStatsMessage(statsDict); err != nil {
+		log.Printf("could not publish message: %v", err)
+	}
+}
+
 func AssembleBot(motion *MotionDetection) *gobot.Robot {
 	versionInfo.WithLabelValues(BuildVersion, CommitHash).Set(1)
-	errorCnt := 0
-	stats := NewSensorStats()
 	work := func() {
-		err := motion.Driver.On(gpio.MotionDetected, func(data interface{}) {
-			metricsMotionsDetected.WithLabelValues(motion.Config.Placement).Inc()
-			metricsMotionTimestamp.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
-			stats.NewEvent()
-			if len(motion.Config.MessageOn) > 0 {
-				motion.publishMessage([]byte(motion.Config.MessageOn))
-			}
-			if motion.Config.LogSensor {
-				log.Println("Detected motion")
-			}
-		})
-		if err != nil {
+		if err := motion.Driver.On(gpio.MotionDetected, motion.motionDetected); err != nil {
 			log.Printf("error for '%s' event: %v", gpio.MotionDetected, err)
 		}
 
-		err = motion.Driver.On(gpio.MotionStopped, func(data interface{}) {
-			if len(motion.Config.MessageOff) > 0 {
-				motion.publishMessage([]byte(motion.Config.MessageOff))
-			}
-			if motion.Config.LogSensor {
-				log.Println("Motion stopped")
-			}
-		})
-		if err != nil {
+		if err := motion.Driver.On(gpio.MotionStopped, motion.motionStopped); err != nil {
 			log.Printf("error for '%s' event: %v", gpio.MotionStopped, err)
 		}
 
-		err = motion.Driver.On(gpio.Error, func(data interface{}) {
-			if errorCnt > 10 {
-				log.Fatalf("Too many errors reading from sensor, shutting down")
-			}
-			errorCnt += 1
-			log.Printf("GPIO error: %v", data)
-		})
-		if err != nil {
+		if err := motion.Driver.On(gpio.Error, motion.onError); err != nil {
 			log.Printf("error for '%s' event: %v", gpio.Error, err)
+		}
+
+		if len(motion.Config.MqttConfig.StatsTopic) > 0 && len(motion.Config.StatIntervals) > 0 {
+			min, _ := motion.Config.GetStatIntervalMin()
+			gobot.Every(time.Duration(min)*time.Second, motion.Send)
 		}
 
 		gobot.Every(heartbeatInterval, func() {
 			metricsHeartbeat.WithLabelValues(motion.Config.Placement).SetToCurrentTime()
 		})
-
-		if len(motion.Config.MqttConfig.StatsTopic) != 0 && len(motion.Config.StatIntervals) > 0 {
-			min, _ := motion.Config.GetStatIntervalMin()
-			max, _ := motion.Config.GetStatIntervalMax()
-
-			gobot.Every(time.Duration(min)*time.Second, func() {
-				statsDict := map[string]int{}
-				for _, stat := range motion.Config.StatIntervals {
-					count := stats.GetEventCountNewerThan(time.Duration(stat) * time.Second)
-					key := fmt.Sprintf("%ds", stat)
-					statsDict[key] = count
-					metricsStats.WithLabelValues(key, motion.Config.Placement).Set(float64(count))
-				}
-
-				stats.PurgeEventsBefore(time.Now().Add(time.Duration(-max) * time.Second))
-				metricsStatsSliceSize.WithLabelValues(motion.Config.Placement).Set(float64(stats.GetStatsSliceSize()))
-				if err := motion.publishStatsMessage(statsDict); err != nil {
-					log.Printf("could not publish message: %v", err)
-				}
-			})
-		}
 	}
 
 	adaptors := []gobot.Connection{motion.Adaptor}
