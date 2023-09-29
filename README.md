@@ -1,17 +1,42 @@
+# gobot-pir
 [![Go Report Card](https://goreportcard.com/badge/github.com/soerenschneider/gobot-pir)](https://goreportcard.com/report/github.com/soerenschneider/gobot-pir)
+![test-workflow](https://github.com/soerenschneider/gobot-pir/actions/workflows/test.yaml/badge.svg)
+![release-workflow](https://github.com/soerenschneider/gobot-pir/actions/workflows/release.yaml/badge.svg)
+![golangci-lint-workflow](https://github.com/soerenschneider/gobot-pir/actions/workflows/golangci-lint.yaml/badge.svg)
 
-This project uses the [Gobot Framework](https://gobot.io/) in combination with a [PIR sensor](https://gobot.io/documentation/drivers/pir-motion-sensor/) to work as a configurable motion detection bot, being able to send simple events via MQTT and exposing machine readable metrics in the Open Metrics Format.
+Detects and forwards motion events using a [PIR sensor](https://gobot.io/documentation/drivers/pir-motion-sensor/) and a Raspberry PI
 
-# MQTT Payloads
+## Features
 
-## Motion detected event
+🤖 Integrates with Home-Assistant<br/>
+📊 Calculates statistics about motion events over time windows, accessible via MQTT and metrics<br/>
+🔐 Allows connecting to secure MQTT brokers using TLS client certificates<br/>
+🔭 Expose PIR events as metrics to enable alerting and Grafana dashboards<br/>
+
+## Installation
+
+### Binaries
+Download a prebuilt binary from the [releases section](https://github.com/soerenschneider/gobot-pir/releases) for your system.
+
+### From Source
+As a prerequisite, you need to have [Golang SDK](https://go.dev/dl/) installed. Then you can install gobot-pir from source by invoking:
+```shell
+$ go install github.com/soerenschneider/gobot-pir@latest
+```
+
+## MQTT Payloads
+
+### Motion detected event
 "ON"
 
-## Motion stopped event
+### Motion stopped event
 "OFF"
 
-# Configuration
-## Via Env Variables
+## Configuration
+
+gobot-pir can be fully configured using either environment variables or a config file.
+
+### Environment Variables Reference
 | ENV                                     | Default                           | Description                                      |
 |-----------------------------------------|-----------------------------------|--------------------------------------------------|
 | GOBOT_MOTION_DETECTION_PLACEMENT        | -                                 | Location short name of this motion detection bot |
@@ -23,28 +48,44 @@ This project uses the [Gobot Framework](https://gobot.io/) in combination with a
 | GOBOT_MOTION_DETECTION_MQTT_TOPIC       | gobot_motion_detection/$PLACEMENT | Topic to publish messages into                   |
 | GOBOT_MOTION_DETECTION_METRICS_ADDR     | :9400                             | Prometheus http handler listen address           |
 
-## Via Config File
+### Via Config File
 
-```json
-{
-  "placement": "location of this sensor",
-  "metrics_addr": ":1234",
-  "gpio_pin": "7",
-  "polling_interval_ms": 50,
-  "log_motions": false,
-  "mqtt_host": "tcp://broker:1883",
-  "mqtt_client_id": "client-id",
-  "mqtt_topic": "mytopic/foo"
-}
-```
+| Struct          | Field                     | Type          | JSON Tag                             | Optional | Defaults |
+|-----------------|---------------------------|---------------|--------------------------------------|----------|----------|
+| Config          | Placement                 | string        | "placement,omitempty"                | Yes      |          |
+|                 | MetricsAddr               | string        | "metrics_addr,omitempty"             | Yes      | ":9191"  |
+|                 | IntervalSecs              | int           | "interval_s,omitempty"               | Yes      | 30       |
+|                 | StatIntervals             | []int         | "stat_intervals,omitempty"           | Yes      |          |
+|                 | LogSensor                 | bool          | "log_sensor,omitempty"               | Yes      | false    |
+|                 | MessageOn                 | string        | "message_on"                         | No       | "ON"     |
+|                 | MessageOff                | string        | "message_off"                        | No       |          |
+|                 | MqttConfig                | MqttConfig    |                                      | No       |          |
+|                 | SensorConfig              | SensorConfig  |                                      | No       |          |
+| MqttConfig      | Host                      | string        | "mqtt_host,omitempty"                | Yes      |          |
+|                 | Topic                     | string        | "mqtt_topic,omitempty"               | Yes      |          |
+|                 | ClientKeyFile             | string        | "mqtt_ssl_key_file,omitempty"        | Yes      |          |
+|                 | ClientCertFile            | string        | "mqtt_ssl_cert_file,omitempty"       | Yes      |          |
+|                 | ServerCaFile              | string        | "mqtt_ssl_ca_file,omitempty"         | Yes      |          |
+|                 | StatsTopic                | string        | "mqtt_stats_topic,omitempty"         | Yes      |          |
+| SensorConfig    | GpioPin                   | string        | "gpio_pin,omitempty"                 | Yes      |          |
+|                 | GpioPollingIntervalMs     | int           | "gpio_polling_interval_ms,omitempty" | Yes      |          |
 
-# Metrics
 
-This project exposes the following metrics in Open Metrics format.
+## Metrics
 
-| Namespace              | Subsystem | Name                               | Type    | Labels   | Help                                                              |
-|------------------------|-----------|------------------------------------|---------|----------|-------------------------------------------------------------------|
-| gobot_motion_detection | sensor    | motions_detected_total             | counter | placement | Total amount of detected motions                                  |
-| gobot_motion_detection | sensor    | motions_detected_timestamp_seconds | gauge   | placement | Timestamp of the last detected motion                             |
-| gobot_motion_detection | mqtt      | messages_published_total           | counter | placement | The amount of published MQTT messages                             |
-| gobot_motion_detection | mqtt      | message_publish_errors_total       | counter | placement | Total amount of errors while trying to publish messages over MQTT |
+This project exposes the following metrics in Open Metrics format under the prefix `gobot_pir`
+
+| Variable Name                      | Metric Type        | Description                                    | Labels              |
+|------------------------------------|--------------------|------------------------------------------------|---------------------|
+| version                            | GaugeVec           | Version information of this robot              | version, commit     |
+| heartbeat_timestamp_seconds        | GaugeVec           | Heartbeat of this robot                        | placement           |
+| motions_detected_total             | CounterVec         | Amount of motions detected                     | placement           |
+| motions_detected_timestamp_seconds | GaugeVec           | Timestamp of latest motion detected            | placement           |
+| messages_published_total           | CounterVec         | The assembleBot temperature in degrees Celsius | placement           |
+| message_publish_errors_total       | CounterVec         | The assembleBot temperature in degrees Celsius | placement           |
+| events_per_interval                | GaugeVec           | The number of events during given intervals    | interval, placement |
+| slice_entries_total                | GaugeVec           | The amount of entries in the stats slice       | placement           |
+
+
+## CHANGELOG
+The changelog can be found [here](CHANGELOG.md)
