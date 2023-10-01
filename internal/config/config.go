@@ -2,12 +2,15 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
+	"reflect"
 	"strings"
+	"sync"
+
+	"github.com/caarlos0/env/v9"
+	"github.com/go-playground/validator/v10"
 )
 
 const (
@@ -16,189 +19,107 @@ const (
 	defaultIntervalSeconds = 30
 	defaultMetricConfig    = ":9191"
 	defaultMessageOn       = "ON"
+	defaultMessageOff      = "ON"
 	maxStatsBucketSeconds  = 7200
 )
 
 var (
+	once                       sync.Once
+	validate                   *validator.Validate
 	defaultStatsBucketsSeconds = []int{5, 15, 30, 60, 120, 300, 600, 1800}
 )
 
 type Config struct {
-	Placement     string `json:"placement,omitempty"`
-	MetricsAddr   string `json:"metrics_addr,omitempty"`
-	IntervalSecs  int    `json:"interval_s,omitempty"`
-	StatIntervals []int  `json:"stat_intervals,omitempty"`
-	LogSensor     bool   `json:"log_sensor,omitempty"`
-	MessageOn     string `json:"message_on"`
-	MessageOff    string `json:"message_off"`
+	Placement     string `json:"placement,omitempty" env:"PLACEMENT" validate:"required"`
+	MetricsAddr   string `json:"metrics_addr,omitempty" env:"METRICS_LISTEN_ADDR" validate:"omitempty,tcp_addr"`
+	IntervalSecs  int    `json:"interval_s,omitempty" env:"INTERVAL_S" validate:"min=1,max=300"`
+	StatIntervals []int  `json:"stat_intervals,omitempty" env:"STAT_INTERVALS" validate:"dive,min=10,max=3600"`
+	LogSensor     bool   `json:"log_sensor,omitempty" env:"LOG_SENSOR_READINGS"`
+	MessageOn     string `json:"message_on" env:"MSG_ON"`
+	MessageOff    string `json:"message_off" env:"MSG_OFF"`
 	MqttConfig
 	SensorConfig
 }
 
 func DefaultConfig() Config {
+	statInterval := make([]int, len(defaultStatsBucketsSeconds))
+	copy(statInterval, defaultStatsBucketsSeconds)
+
 	return Config{
 		LogSensor:     defaultLogValues,
 		IntervalSecs:  defaultIntervalSeconds,
-		StatIntervals: defaultStatsBucketsSeconds,
+		StatIntervals: statInterval,
 		MetricsAddr:   defaultMetricConfig,
 		SensorConfig:  defaultSensorConfig(),
-		MessageOn:     "ON",
+		MessageOn:     defaultMessageOn,
+		MessageOff:    defaultMessageOff,
 	}
 }
 
-func ConfigFromEnv() Config {
-	conf := DefaultConfig()
-
-	placement, err := fromEnv("PLACEMENT")
-	if err == nil {
-		conf.Placement = placement
-	}
-
-	logSensor, err := fromEnvBool("LOG_SENSOR")
-	if err == nil {
-		conf.LogSensor = logSensor
-	}
-
-	intervalSeconds, err := fromEnvInt("INTERVAL_S")
-	if err == nil {
-		conf.IntervalSecs = intervalSeconds
-	}
-
-	mqttHost, err := fromEnv("MQTT_HOST")
-	if err == nil {
-		conf.Host = mqttHost
-	}
-
-	mqttTopic, err := fromEnv("MQTT_TOPIC")
-	if err == nil {
-		conf.Topic = mqttTopic
-	}
-
-	mqttStatsTopic, err := fromEnv("MQTT_STATS_TOPIC")
-	if err == nil {
-		conf.StatsTopic = mqttStatsTopic
-	}
-
-	metricConfig, err := fromEnv("METRICS_ADDR")
-	if err == nil {
-		conf.MetricsAddr = metricConfig
-	}
-
-	clientKeyFile, err := fromEnv("SSL_CLIENT_KEY_FILE")
-	if err == nil {
-		conf.ClientKeyFile = clientKeyFile
-	}
-
-	clientCertFile, err := fromEnv("SSL_CLIENT_CERT_FILE")
-	if err == nil {
-		conf.ClientCertFile = clientCertFile
-	}
-
-	conf.SensorConfig.ConfigFromEnv()
-
-	return conf
-}
-
-func ReadJsonConfig(filePath string) (*Config, error) {
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("could not read config from file: %v", err)
-	}
-
+func Read(filePath string) (*Config, error) {
 	ret := DefaultConfig()
-	err = json.Unmarshal(fileContent, &ret)
+
+	if len(filePath) > 0 {
+		fileContent, err := os.ReadFile(filePath)
+		if err != nil {
+			return nil, fmt.Errorf("could not read config from file: %v", err)
+		}
+
+		err = json.Unmarshal(fileContent, &ret)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	opts := env.Options{
+		Prefix: fmt.Sprintf("%s_", strings.ToUpper(BotName)),
+	}
+	err := env.ParseWithOptions(&ret, opts)
 	return &ret, err
 }
 
-func (conf *Config) Validate() error {
-	if conf.Placement == "" {
-		return errors.New("empty placement provided")
-	}
-
-	if conf.IntervalSecs < 30 {
-		return fmt.Errorf("invalid interval: must not be lower than 30 but is %d", conf.IntervalSecs)
-	}
-
-	if conf.IntervalSecs > 300 {
-		return fmt.Errorf("invalid interval: mut not be greater than 300 but is %d", conf.IntervalSecs)
-	}
-
-	if len(conf.StatIntervals) > 0 {
-		min, _ := conf.GetStatIntervalMin()
-		if min < 1 {
-			return fmt.Errorf("minimal value in stats bucket must not be < 1: %d", min)
+func Validate(s interface{}) error {
+	once.Do(func() {
+		validate = validator.New()
+		if err := validate.RegisterValidation("mqtt_topic", validateTopic); err != nil {
+			log.Fatal("could not build custom validation 'mqtt_topic'")
 		}
-
-		max, _ := conf.GetStatIntervalMax()
-		if max > maxStatsBucketSeconds {
-			return fmt.Errorf("maximal value in stats bucket must not be > %d: %d", maxStatsBucketSeconds, max)
+		if err := validate.RegisterValidation("mqtt_broker", validateBroker); err != nil {
+			log.Fatal("could not build custom validation 'validateBroker'")
 		}
-	}
-
-	if err := conf.SensorConfig.Validate(); err != nil {
-		return err
-	}
-
-	return conf.MqttConfig.Validate()
+	})
+	return validate.Struct(s)
 }
 
-func (conf *Config) Print() {
-	log.Println("-----------------")
-	log.Println("Configuration:")
-	log.Printf("Placement=%s", conf.Placement)
-	log.Printf("LogSensor=%t", conf.LogSensor)
-	log.Printf("MetricsAddr=%s", conf.MetricsAddr)
-	log.Printf("IntervalSecs=%d", conf.IntervalSecs)
-	log.Printf("Host=%s", conf.Host)
-	log.Printf("Topic=%s", conf.Topic)
-
-	if len(conf.StatIntervals) > 0 {
-		log.Printf("StatIntervals=%v", conf.StatIntervals)
+func validateTopic(fl validator.FieldLevel) bool {
+	// Get the field value and check if it's a slice
+	field := fl.Field()
+	if field.Kind() != reflect.String {
+		return false
 	}
 
-	conf.SensorConfig.Print()
-	conf.MqttConfig.Print()
+	topic, ok := field.Interface().(string)
+	if !ok || !matchTopic(topic) {
+		return false
+	}
 
-	log.Println("-----------------")
+	return true
 }
 
-func computeEnvName(name string) string {
-	return fmt.Sprintf("%s_%s", strings.ToUpper(BotName), strings.ToUpper(name))
-}
-
-func fromEnv(name string) (string, error) {
-	name = computeEnvName(name)
-	val := os.Getenv(name)
-	if val == "" {
-		return "", errors.New("not defined")
-	}
-	return val, nil
-}
-
-func fromEnvInt(name string) (int, error) {
-	val, err := fromEnv(name)
-	if err != nil {
-		return -1, err
+func validateBroker(fl validator.FieldLevel) bool {
+	// Get the field value and check if it's a slice
+	field := fl.Field()
+	if field.Kind() != reflect.String {
+		return false
 	}
 
-	parsed, err := strconv.Atoi(val)
-	if err != nil {
-		return -1, err
-	}
-	return parsed, nil
-}
-
-func fromEnvBool(name string) (bool, error) {
-	val, err := fromEnv(name)
-	if err != nil {
-		return false, err
+	// Convert to string and check its value
+	broker, ok := field.Interface().(string)
+	if !ok || !matchHost(broker) {
+		return false
 	}
 
-	parsed, err := strconv.ParseBool(val)
-	if err != nil {
-		return false, err
-	}
-	return parsed, nil
+	return true
 }
 
 func (conf *Config) GetStatIntervalMin() (int, error) {
