@@ -24,52 +24,41 @@ As a prerequisite, you need to have [Golang SDK](https://go.dev/dl/) installed. 
 $ go install github.com/soerenschneider/gobot-pir@latest
 ```
 
-## MQTT Payloads
-
-### Motion detected event
-"ON"
-
-### Motion stopped event
-"OFF"
-
 ## Configuration
 
 gobot-pir can be fully configured using either environment variables or a config file.
 
-### Environment Variables Reference
-| ENV                                     | Default                           | Description                                      |
-|-----------------------------------------|-----------------------------------|--------------------------------------------------|
-| GOBOT_MOTION_DETECTION_PLACEMENT        | -                                 | Location short name of this motion detection bot |
-| GOBOT_MOTION_DETECTION_LOG_MOTIONS      | false                             | Write a log message for every motion event       |
-| GOBOT_MOTION_DETECTION_GPIO_PIN         | 7                                 | GPIO pin to poll                                 |
-| GOBOT_MOTION_DETECTION_GPIO_POLLING_MS  | 75                                | GPIO polling frequency in milliseconds           |
-| GOBOT_MOTION_DETECTION_MQTT_HOST        | gobot_motion_detection-$PLACEMENT | MQTT connection broker                           |
-| GOBOT_MOTION_DETECTION_MQTT_CLIENT_ID   | gobot_motion_detection-$PLACEMENT | Client ID for the MQTT connection                |
-| GOBOT_MOTION_DETECTION_MQTT_TOPIC       | gobot_motion_detection/$PLACEMENT | Topic to publish messages into                   |
-| GOBOT_MOTION_DETECTION_METRICS_ADDR     | :9400                             | Prometheus http handler listen address           |
+| Field Name       | Type         | JSON Key       | Env Variable                  | Validation           | Default       | Description                      |
+|------------------|--------------|----------------|-------------------------------|----------------------|---------------|----------------------------------|
+| Placement        | string       | placement      | GOBOT_PIR_PLACEMENT           | required             | -             | Placement configuration          |
+| MetricsAddr      | string       | metrics_addr   | GOBOT_PIR_METRICS_LISTEN_ADDR | omitempty,tcp_addr   | 0.0.0.0:9191  | Metrics address                  |
+| IntervalSecs     | int          | interval_s     | GOBOT_PIR_INTERVAL_S          | min=1,max=300        |               | Interval in seconds              |
+| StatIntervals    | []int        | stat_intervals | GOBOT_PIR_STAT_INTERVALS      | dive,min=10,max=3600 |               | Statistic intervals              |
+| LogSensor        | bool         | log_sensor     | GOBOT_PIR_LOG_SENSOR_READINGS | false                |               | Log sensor readings              |
+| MessageOn        | string       | message_on     | GOBOT_PIR_MSG_ON              |                      | ON            | Message when event is registered |
+| MessageOff       | string       | message_off    | GOBOT_PIR_MSG_OFF             |                      | OFF           | Message when event stops         |
+| MqttConfig       | MqttConfig   | -              |                               |                      |               | MQTT configuration               |
+| SensorConfig     | SensorConfig |                |                               |                      |               | Sensor configuration             |
+
+
+| Field Name       | Type     | JSON Key           | Env Variable                       | Validation                                       | Default | Description               |
+|------------------|----------|--------------------|------------------------------------|--------------------------------------------------|---------|---------------------------|
+| Disabled         | bool     | disable_mqtt       | GOBOT_PIR_MQTT_DISABLED            |                                                  | N/A     | Disabled MQTT             |
+| Host             | string   | mqtt_host          | GOBOT_PIR_MQTT_BROKER              | required_if=Disabled false,mqtt_broker           | N/A     | MQTT broker host          |
+| Topic            | string   | mqtt_topic         | GOBOT_PIR_MQTT_TOPIC               | required_if=Disabled false,mqtt_topic            | N/A     | MQTT topic                |
+| StatsTopic       | string   | mqtt_stats_topic   | GOBOT_PIR_MQTT_STATS_TOPIC         | omitempty,mqtt_topic                             | N/A     | MQTT statistics topic     |
+| ClientKeyFile    | string   | mqtt_ssl_key_file  | GOBOT_PIR_MQTT_TLS_CLIENT_KEY_FILE | required_unless=ClientCertFile '',omitempty,file | N/A     | MQTT client SSL key file  |
+| ClientCertFile   | string   | mqtt_ssl_cert_file | GOBOT_PIR_MQTT_TLS_CLIENT_CRT_FILE | required_unless=ClientKeyFile '',omitempty,file  | N/A     | MQTT client SSL cert file |
+| ServerCaFile     | string   | mqtt_ssl_ca_file   | GOBOT_PIR_MQTT_TLS_SERVER_CA_FILE  | omitempty,file                                   | N/A     | MQTT server SSL CA file   |
+
+
+| Field Name               | Type     | JSON Key                 | Env Variable                       | Validation             | Default | Description                    |
+|--------------------------|----------|--------------------------|------------------------------------|------------------------|---------|--------------------------------|
+| GpioPin                  | string   | gpio_pin                 | GOBOT_PIR_GPIO_PIN                 | required,min=0         | 7       | GPIO pin configuration         |
+| GpioPollingIntervalMs    | int      | gpio_polling_interval_ms | GOBOT_PIR_GPIO_POLLING_INTERVAL_MS | required,min=5,max=500 | 75      | GPIO polling interval in ms    |
+
 
 ### Via Config File
-
-| Struct          | Field                     | Type          | JSON Tag                             | Optional | Defaults |
-|-----------------|---------------------------|---------------|--------------------------------------|----------|----------|
-| Config          | Placement                 | string        | "placement,omitempty"                | Yes      |          |
-|                 | MetricsAddr               | string        | "metrics_addr,omitempty"             | Yes      | ":9191"  |
-|                 | IntervalSecs              | int           | "interval_s,omitempty"               | Yes      | 30       |
-|                 | StatIntervals             | []int         | "stat_intervals,omitempty"           | Yes      |          |
-|                 | LogSensor                 | bool          | "log_sensor,omitempty"               | Yes      | false    |
-|                 | MessageOn                 | string        | "message_on"                         | No       | "ON"     |
-|                 | MessageOff                | string        | "message_off"                        | No       |          |
-|                 | MqttConfig                | MqttConfig    |                                      | No       |          |
-|                 | SensorConfig              | SensorConfig  |                                      | No       |          |
-| MqttConfig      | Host                      | string        | "mqtt_host,omitempty"                | Yes      |          |
-|                 | Topic                     | string        | "mqtt_topic,omitempty"               | Yes      |          |
-|                 | ClientKeyFile             | string        | "mqtt_ssl_key_file,omitempty"        | Yes      |          |
-|                 | ClientCertFile            | string        | "mqtt_ssl_cert_file,omitempty"       | Yes      |          |
-|                 | ServerCaFile              | string        | "mqtt_ssl_ca_file,omitempty"         | Yes      |          |
-|                 | StatsTopic                | string        | "mqtt_stats_topic,omitempty"         | Yes      |          |
-| SensorConfig    | GpioPin                   | string        | "gpio_pin,omitempty"                 | Yes      |          |
-|                 | GpioPollingIntervalMs     | int           | "gpio_polling_interval_ms,omitempty" | Yes      |          |
-
 
 ## Metrics
 
