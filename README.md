@@ -57,9 +57,6 @@ gobot-pir can be fully configured using either environment variables or a config
 | GpioPin                  | string   | gpio_pin                 | GOBOT_PIR_GPIO_PIN                 | required,min=0         | 7       | GPIO pin configuration         |
 | GpioPollingIntervalMs    | int      | gpio_polling_interval_ms | GOBOT_PIR_GPIO_POLLING_INTERVAL_MS | required,min=5,max=500 | 75      | GPIO polling interval in ms    |
 
-
-### Via Config File
-
 ## Metrics
 
 This project exposes the following metrics in Open Metrics format under the prefix `gobot_pir`
