@@ -33,7 +33,7 @@ type MotionDetection struct {
 	Stats       *SensorStats
 	errorCount  int
 
-	Config config.Config
+	Config *config.Config
 }
 
 func (m *MotionDetection) publishMessage(msg []byte) {
