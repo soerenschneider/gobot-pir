@@ -17,9 +17,9 @@ const (
 	BotName                = "gobot_pir"
 	defaultLogValues       = false
 	defaultIntervalSeconds = 30
-	defaultMetricConfig    = ":9191"
+	defaultMetricConfig    = "0.0.0.0:9191"
 	defaultMessageOn       = "ON"
-	defaultMessageOff      = "ON"
+	defaultMessageOff      = "OFF"
 	maxStatsBucketSeconds  = 7200
 )
 
