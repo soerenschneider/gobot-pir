@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.3](https://github.com/soerenschneider/gobot-pir/compare/v1.6.2...v1.6.3) (2024-06-10)
+
+
+### Bug Fixes
+
+* **deps:** bump github.com/go-playground/validator/v10 ([79c980d](https://github.com/soerenschneider/gobot-pir/commit/79c980d38688e4eafb5464859410b7b45e733d80))
+* **deps:** bump github.com/prometheus/client_golang ([ba016a9](https://github.com/soerenschneider/gobot-pir/commit/ba016a93d9d3e5704d69eb9242646235f66d4db0))
+* fix default values ([57a4ce6](https://github.com/soerenschneider/gobot-pir/commit/57a4ce6e6a545f493d50e6926e7b649809afef40))
+* fix syntax ([d5f2937](https://github.com/soerenschneider/gobot-pir/commit/d5f29376070779f2657ff55969f3295a7eec0649))
+
 ## [1.6.2](https://github.com/soerenschneider/gobot-pir/compare/v1.6.1...v1.6.2) (2023-07-11)
 
 
